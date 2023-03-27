@@ -1,4 +1,5 @@
 import json
+import logging
 import sys
 import psycopg2
 import psycopg2.extras
@@ -50,6 +51,8 @@ def column_type(schema_property):
     # TIMESTAMP WITH TIME ZONE is the better column type
     elif property_format == 'date-time':
         col_type = 'timestamp without time zone'
+    elif property_format == 'date':
+        col_type = 'date'
     elif property_format == 'time':
         col_type = 'time without time zone'
     elif 'number' in property_type:
@@ -69,13 +72,13 @@ def column_type(schema_property):
     elif 'string' in property_type:
         if 'minLength' in schema_property and 'maxLength' in schema_property:
             if schema_property['minLength'] == schema_property['maxLength']:
-                col_type = 'char({n})'.format(n=schema_property['maxLength'])
+                col_type = 'character ({n})'.format(n=schema_property['maxLength'])
             elif schema_property['minLength'] < schema_property['maxLength']:
-                col_type = 'varchar({n})'.format(n=schema_property['maxLength'])
+                col_type = 'character varying ({n})'.format(n=schema_property['maxLength'])
             else:
-                col_type = 'varchar'
+                col_type = 'character varying'
         else:
-            col_type = 'varchar'
+            col_type = 'character varying'
     elif 'boolean' in property_type:
         col_type = 'boolean'
 
