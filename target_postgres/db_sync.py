@@ -569,7 +569,10 @@ class DbSync:
 
         for (name, properties_schema) in self.flatten_schema.items():
             self.logger.info('Column name: %s', name)
-            self.logger.info('Column current type: %s', columns_dict[name.lower()]['data_type'].lower())
+
+            if name.lower() in columns_dict:
+                self.logger.info('Column current type: %s', columns_dict[name.lower()]['data_type'].lower())
+
             self.logger.info('Column from tap type: %s', column_type(properties_schema)[0])
 
         columns_to_replace = [
