@@ -80,6 +80,8 @@ def column_type(schema_property):
                 col_size = schema_property['maxLength']
             else:
                 col_type = 'character varying'
+        elif property_format == 'uuid':
+            col_type = 'uuid'
         else:
             col_type = 'character varying'
     elif 'boolean' in property_type:
@@ -100,7 +102,6 @@ def column_clause(name, schema_property):
         return '{} {} ({})'.format(safe_column_name(name), col_type, col_size)
     else:
         return '{} {}'.format(safe_column_name(name), col_type)
-
 
 
 def flatten_key(k, parent_key, sep):
@@ -156,7 +157,7 @@ def _should_json_dump_value(key, value, flatten_schema=None):
     if isinstance(value, (dict, list)):
         return True
 
-    if flatten_schema and key in flatten_schema and 'type' in flatten_schema[key]\
+    if flatten_schema and key in flatten_schema and 'type' in flatten_schema[key] \
             and set(flatten_schema[key]['type']) == {'null', 'object', 'array'}:
         return True
 
@@ -567,22 +568,16 @@ class DbSync:
         for column in columns_to_add:
             self.add_column(column, stream)
 
-        for (name, properties_schema) in self.flatten_schema.items():
-            self.logger.info('Column name: %s', name)
-
-            if name.lower() in columns_dict:
-                self.logger.info('Column current type: %s', columns_dict[name.lower()]['data_type'].lower())
-
-            self.logger.info('Column from tap type: %s', column_type(properties_schema)[0])
-
         columns_to_replace = [
             (safe_column_name(name), column_clause(
                 name,
                 properties_schema
             ))
             for (name, properties_schema) in self.flatten_schema.items()
-            if name.lower() in columns_dict and
-            columns_dict[name.lower()]['data_type'].lower() != column_type(properties_schema)[0]
+            if name.lower() in columns_dict and (
+                       columns_dict[name.lower()]['data_type'].lower() != column_type(properties_schema)[0]
+                       or columns_dict[name.lower()]['character_maximum_length'] != column_type(properties_schema)[1]
+               )
         ]
 
         for (column_name, column) in columns_to_replace:
