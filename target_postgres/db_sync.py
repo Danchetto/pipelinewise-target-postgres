@@ -54,8 +54,8 @@ def column_type(schema_property):
         col_type = 'time without time zone'
     elif 'number' in property_type:
         col_type = 'double precision'
-    elif 'integer' in property_type and 'string' in property_type:
-        col_type = 'character varying'
+    # elif 'integer' in property_type and 'string' in property_type:
+    #     col_type = 'character varying'
     elif 'integer' in property_type:
         if 'maximum' in schema_property:
             if schema_property['maximum'] <= 32767:
@@ -66,6 +66,16 @@ def column_type(schema_property):
                 col_type = 'bigint'
         else:
             col_type = 'numeric'
+    elif 'string' in property_type:
+        if 'minLength' in schema_property and 'maxLength' in schema_property:
+            if schema_property['minLength'] == schema_property['maxLength']:
+                col_type = 'char({n})'.format(n=schema_property['maxLength'])
+            elif schema_property['minLength'] < schema_property['maxLength']:
+                col_type = 'varchar({n})'.format(n=schema_property['maxLength'])
+            else:
+                col_type = 'varchar'
+        else:
+            col_type = 'varchar'
     elif 'boolean' in property_type:
         col_type = 'boolean'
 
