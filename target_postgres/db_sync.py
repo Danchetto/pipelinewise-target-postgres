@@ -566,7 +566,7 @@ class DbSync:
             ))
             for (name, properties_schema) in self.flatten_schema.items()
             if name.lower() in columns_dict and
-            columns_dict[name.lower()]['data_type'].lower() != column_type(properties_schema).lower()
+            columns_dict[name.lower()]['data_type'].lower() != re.sub(r'\s\(\d+\)', '', column_type(properties_schema).lower())
         ]
 
         for (column_name, column) in columns_to_replace:
