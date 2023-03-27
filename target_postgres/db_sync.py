@@ -559,7 +559,7 @@ class DbSync:
         for column in columns_to_add:
             self.add_column(column, stream)
 
-        logging.info(columns_dict)
+        self.logger.info(columns_dict)
 
         columns_to_replace = [
             (safe_column_name(name), column_clause(
