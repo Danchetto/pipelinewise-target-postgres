@@ -567,7 +567,10 @@ class DbSync:
         for column in columns_to_add:
             self.add_column(column, stream)
 
-        self.logger.info(columns_dict)
+        for (name, properties_schema) in self.flatten_schema.items():
+            self.logger.info(msg=name)
+            self.logger.info(msg=columns_dict[name.lower()]['data_type'].lower())
+            self.logger.info(msg=column_type(properties_schema)[0])
 
         columns_to_replace = [
             (safe_column_name(name), column_clause(
