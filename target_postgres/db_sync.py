@@ -42,6 +42,7 @@ def column_type(schema_property):
     property_type = schema_property['type']
     property_format = schema_property['format'] if 'format' in schema_property else None
     col_type = 'character varying'
+    col_size = None
     if 'object' in property_type or 'array' in property_type:
         col_type = 'jsonb'
 
@@ -72,9 +73,11 @@ def column_type(schema_property):
     elif 'string' in property_type:
         if 'minLength' in schema_property and 'maxLength' in schema_property:
             if schema_property['minLength'] == schema_property['maxLength']:
-                col_type = 'character ({n})'.format(n=schema_property['maxLength'])
+                col_type = 'character'
+                col_size = schema_property['maxLength']
             elif schema_property['minLength'] < schema_property['maxLength']:
-                col_type = 'character varying ({n})'.format(n=schema_property['maxLength'])
+                col_type = 'character varying'
+                col_size = schema_property['maxLength']
             else:
                 col_type = 'character varying'
         else:
@@ -84,7 +87,7 @@ def column_type(schema_property):
 
     get_logger('target_postgres').debug("schema_property: %s -> col_type: %s", schema_property, col_type)
 
-    return col_type
+    return [col_type, col_size]
 
 
 def safe_column_name(name):
@@ -92,7 +95,12 @@ def safe_column_name(name):
 
 
 def column_clause(name, schema_property):
-    return '{} {}'.format(safe_column_name(name), column_type(schema_property))
+    [col_type, col_size] = column_type(schema_property)
+    if col_size is not None:
+        return '{} {} ({})'.format(safe_column_name(name), col_type, col_size)
+    else:
+        return '{} {}'.format(safe_column_name(name), col_type)
+
 
 
 def flatten_key(k, parent_key, sep):
@@ -535,7 +543,7 @@ class DbSync:
         )
 
     def get_table_columns(self, table_name):
-        return self.query("""SELECT column_name, data_type
+        return self.query("""SELECT column_name, data_type, character_maximum_length
       FROM information_schema.columns
       WHERE lower(table_name) = %s AND lower(table_schema) = %s""", (table_name.replace("\"", "").lower(),
                                                                      self.schema_name.lower()))
@@ -568,7 +576,7 @@ class DbSync:
             ))
             for (name, properties_schema) in self.flatten_schema.items()
             if name.lower() in columns_dict and
-            columns_dict[name.lower()]['data_type'].lower() != re.sub(r'\s\(\d+\)', '', column_type(properties_schema).lower())
+            columns_dict[name.lower()]['data_type'].lower() != column_type(properties_schema)[0]
         ]
 
         for (column_name, column) in columns_to_replace:
