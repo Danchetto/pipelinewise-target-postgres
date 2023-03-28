@@ -82,6 +82,8 @@ def column_type(schema_property):
                 col_type = 'character varying'
         elif property_format == 'uuid':
             col_type = 'uuid'
+        elif property_format == 'text':
+            col_type = 'text'
         else:
             col_type = 'character varying'
     elif 'boolean' in property_type:
