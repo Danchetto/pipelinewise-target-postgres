@@ -57,7 +57,7 @@ def column_type(schema_property):
     elif property_format == 'time':
         col_type = 'time without time zone'
     elif 'number' in property_type:
-        col_type = 'real'
+        col_type = 'double precision'
     # elif 'integer' in property_type and 'string' in property_type:
     #     col_type = 'character varying'
     elif 'integer' in property_type:
